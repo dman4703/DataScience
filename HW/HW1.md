@@ -3,9 +3,9 @@
 ### 1. Conditional Probability and the Chain Rule
 
 Recall the definition of conditional probability: 
- $$` P(A \mid B) \;=\; \frac{P(A \cap B)}{P(B)} `$$
+ $$ P(A \mid B) \;=\; \frac{P(A \cap B)}{P(B)} $$
 where $\cap$ means "intersection."
-##### a. Prove that $` P(A \cap B \cap C) \;=\; P(A \mid B, C)\,P(B \mid C)\,P(C) `$
+##### a. Prove that $ P(A \cap B \cap C) \;=\; P(A \mid B, C)\,P(B \mid C)\,P(C) $
 
 
 
