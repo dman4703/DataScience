@@ -220,7 +220,7 @@ plt.plot(x, y)
 
 
     
-![png](output_49_1.png)
+![png](L3/output_49_1.png)
     
 
 
