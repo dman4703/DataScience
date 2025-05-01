@@ -143,6 +143,7 @@ follow the submission instructions, and check your score on the scoreboard. Good
 
 
 ```python
+# Data exploration
 files = [
     "./data/train.label",
     "./data/test_partial.label",
@@ -215,16 +216,340 @@ document in train.data.
 You are also given PARTIAL testing sets. The testing sets provided are to give you an idea of how your classifier will perform on the full dataset.
 '''
 
-import argparse
 import numpy as np
+from scipy.sparse import coo_matrix
 
 STEP_SIZE = 0.0001
 
 train_data_file  = "./data/train.data"
 train_label_file = "./data/train.label"
 test_data_file   = "./data/test_partial.data"
-test_label_file = "./data/test_partial.data"
+test_label_file = "./data/test_partial.label"
 ```
+
+
+```python
+# Read in training data
+# labels
+y_train = np.loadtxt(train_label_file, dtype=int)
+
+# data
+train_triples  = np.loadtxt(train_data_file, dtype=int)
+doc_ids_train  = train_triples[:, 0] - 1   # zero-based
+word_ids_train = train_triples[:, 1] - 1
+counts_train   = train_triples[:, 2]
+
+n_train_docs = doc_ids_train.max() + 1
+vocab_size   = word_ids_train.max() + 1    # derive V from train set
+
+X_train = coo_matrix(
+    (counts_train, (doc_ids_train, word_ids_train)),
+    shape=(n_train_docs, vocab_size)
+).tocsr()
+```
+
+
+```python
+# Read in testing data
+# 1) Load labels
+y_test = np.loadtxt(test_label_file, dtype=int)
+
+# 2) Load raw triples
+test_triples  = np.loadtxt(test_data_file, dtype=int)
+doc_ids_test  = test_triples[:, 0] - 1   # still 0-based, but possibly sparse
+word_ids_test = test_triples[:, 1] - 1
+counts_test   = test_triples[:, 2]
+
+# 3) Build a compact mapping of document IDs → consecutive rows
+unique_ids = np.unique(doc_ids_test)
+id2row     = {orig: new for new, orig in enumerate(unique_ids)}
+new_rows   = np.array([id2row[d] for d in doc_ids_test])
+
+# 4) Build the sparse test‐matrix with exactly len(unique_ids) rows
+X_test = coo_matrix(
+    (counts_test, (new_rows, word_ids_test)),
+    shape=(len(unique_ids), vocab_size)
+).tocsr()
+```
+
+
+```python
+# initialize parameters
+w = np.zeros(vocab_size)
+b = 0.0
+
+# define the sigma function
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+```
+
+
+```python
+STEP_SIZE       = 0.0001
+TOL_UPDATE      = 1e-6     # ℓ₂‐norm threshold on the weight update
+TOL_LOSS_REL    = 1e-5     # relative change in loss threshold
+MAX_ITER        = 100000   # hard cap on iterations
+
+w = np.zeros(vocab_size)
+b = 0.0
+
+prev_loss = None
+epoch     = 0
+
+while True:
+    # 1) forward pass
+    z      = X_train.dot(w) + b
+    y_hat  = sigmoid(z)
+
+    # 2) compute gradients
+    delta  = y_train - y_hat
+    dw     = X_train.T.dot(delta)
+    db     = delta.sum()
+
+    # 2b) compute update norm
+    weight_update = STEP_SIZE * dw
+    update_norm   = np.linalg.norm(weight_update)
+
+    # 3) compute current loss
+    loss = -np.mean(y_train * np.log(y_hat) + (1-y_train) * np.log(1-y_hat))
+
+    # 4) check stopping criteria
+    cond_update = (update_norm < TOL_UPDATE)
+    cond_loss   = (prev_loss is not None and 
+                   abs(loss - prev_loss) / prev_loss < TOL_LOSS_REL)
+    if cond_update or cond_loss or epoch >= MAX_ITER:
+        print(f"Stopping at epoch {epoch}: "
+              f"update_norm={update_norm:.2e}, "
+              f"rel_loss_change={None if prev_loss is None else abs(loss-prev_loss)/prev_loss:.2e}")
+        break
+
+    # 5) parameter update
+    w += weight_update
+    b += STEP_SIZE * db
+
+    # 6) logging
+    if epoch % 1000 == 0:
+        print(f"Epoch {epoch:4d} — loss {loss:.6f} — update_norm {update_norm:.2e}")
+
+    prev_loss = loss
+    epoch += 1
+```
+
+    Epoch    0 — loss 0.693147 — update_norm 3.23e-02
+    Epoch 1000 — loss 0.101985 — update_norm 1.21e-03
+    Epoch 2000 — loss 0.059219 — update_norm 6.99e-04
+    Epoch 3000 — loss 0.041680 — update_norm 4.95e-04
+    Epoch 4000 — loss 0.032069 — update_norm 3.83e-04
+    Epoch 5000 — loss 0.026007 — update_norm 3.12e-04
+    Epoch 6000 — loss 0.021841 — update_norm 2.63e-04
+    Epoch 7000 — loss 0.018807 — update_norm 2.27e-04
+    Epoch 8000 — loss 0.016502 — update_norm 2.00e-04
+    Epoch 9000 — loss 0.014692 — update_norm 1.78e-04
+    Epoch 10000 — loss 0.013236 — update_norm 1.61e-04
+    Epoch 11000 — loss 0.012038 — update_norm 1.47e-04
+    Epoch 12000 — loss 0.011037 — update_norm 1.35e-04
+    Epoch 13000 — loss 0.010188 — update_norm 1.24e-04
+    Epoch 14000 — loss 0.009459 — update_norm 1.16e-04
+    Epoch 15000 — loss 0.008826 — update_norm 1.08e-04
+    Epoch 16000 — loss 0.008272 — update_norm 1.01e-04
+    Epoch 17000 — loss 0.007783 — update_norm 9.53e-05
+    Epoch 18000 — loss 0.007348 — update_norm 9.00e-05
+    Epoch 19000 — loss 0.006958 — update_norm 8.53e-05
+    Epoch 20000 — loss 0.006608 — update_norm 8.10e-05
+    Epoch 21000 — loss 0.006290 — update_norm 7.72e-05
+    Epoch 22000 — loss 0.006002 — update_norm 7.37e-05
+    Epoch 23000 — loss 0.005739 — update_norm 7.04e-05
+    Epoch 24000 — loss 0.005498 — update_norm 6.75e-05
+    Epoch 25000 — loss 0.005276 — update_norm 6.48e-05
+    Epoch 26000 — loss 0.005071 — update_norm 6.23e-05
+    Epoch 27000 — loss 0.004881 — update_norm 6.00e-05
+    Epoch 28000 — loss 0.004705 — update_norm 5.78e-05
+    Epoch 29000 — loss 0.004542 — update_norm 5.58e-05
+    Epoch 30000 — loss 0.004389 — update_norm 5.40e-05
+    Epoch 31000 — loss 0.004246 — update_norm 5.22e-05
+    Epoch 32000 — loss 0.004112 — update_norm 5.06e-05
+    Epoch 33000 — loss 0.003986 — update_norm 4.90e-05
+    Epoch 34000 — loss 0.003868 — update_norm 4.76e-05
+    Epoch 35000 — loss 0.003756 — update_norm 4.62e-05
+    Epoch 36000 — loss 0.003651 — update_norm 4.49e-05
+    Epoch 37000 — loss 0.003551 — update_norm 4.37e-05
+    Epoch 38000 — loss 0.003457 — update_norm 4.26e-05
+    Epoch 39000 — loss 0.003367 — update_norm 4.15e-05
+    Epoch 40000 — loss 0.003282 — update_norm 4.04e-05
+    Epoch 41000 — loss 0.003201 — update_norm 3.94e-05
+    Epoch 42000 — loss 0.003124 — update_norm 3.85e-05
+    Epoch 43000 — loss 0.003051 — update_norm 3.76e-05
+    Epoch 44000 — loss 0.002981 — update_norm 3.67e-05
+    Epoch 45000 — loss 0.002914 — update_norm 3.59e-05
+    Epoch 46000 — loss 0.002850 — update_norm 3.51e-05
+    Epoch 47000 — loss 0.002789 — update_norm 3.44e-05
+    Epoch 48000 — loss 0.002730 — update_norm 3.36e-05
+    Epoch 49000 — loss 0.002674 — update_norm 3.30e-05
+    Epoch 50000 — loss 0.002620 — update_norm 3.23e-05
+    Epoch 51000 — loss 0.002568 — update_norm 3.17e-05
+    Epoch 52000 — loss 0.002518 — update_norm 3.10e-05
+    Epoch 53000 — loss 0.002471 — update_norm 3.05e-05
+    Epoch 54000 — loss 0.002424 — update_norm 2.99e-05
+    Epoch 55000 — loss 0.002380 — update_norm 2.93e-05
+    Epoch 56000 — loss 0.002337 — update_norm 2.88e-05
+    Epoch 57000 — loss 0.002296 — update_norm 2.83e-05
+    Epoch 58000 — loss 0.002256 — update_norm 2.78e-05
+    Epoch 59000 — loss 0.002217 — update_norm 2.73e-05
+    Epoch 60000 — loss 0.002180 — update_norm 2.69e-05
+    Epoch 61000 — loss 0.002144 — update_norm 2.64e-05
+    Epoch 62000 — loss 0.002109 — update_norm 2.60e-05
+    Epoch 63000 — loss 0.002075 — update_norm 2.56e-05
+    Epoch 64000 — loss 0.002043 — update_norm 2.52e-05
+    Epoch 65000 — loss 0.002011 — update_norm 2.48e-05
+    Epoch 66000 — loss 0.001980 — update_norm 2.44e-05
+    Epoch 67000 — loss 0.001950 — update_norm 2.41e-05
+    Epoch 68000 — loss 0.001921 — update_norm 2.37e-05
+    Epoch 69000 — loss 0.001893 — update_norm 2.34e-05
+    Epoch 70000 — loss 0.001866 — update_norm 2.30e-05
+    Epoch 71000 — loss 0.001840 — update_norm 2.27e-05
+    Epoch 72000 — loss 0.001814 — update_norm 2.24e-05
+    Epoch 73000 — loss 0.001789 — update_norm 2.21e-05
+    Epoch 74000 — loss 0.001764 — update_norm 2.18e-05
+    Epoch 75000 — loss 0.001741 — update_norm 2.15e-05
+    Epoch 76000 — loss 0.001718 — update_norm 2.12e-05
+    Epoch 77000 — loss 0.001695 — update_norm 2.09e-05
+    Epoch 78000 — loss 0.001673 — update_norm 2.06e-05
+    Epoch 79000 — loss 0.001652 — update_norm 2.04e-05
+    Epoch 80000 — loss 0.001631 — update_norm 2.01e-05
+    Epoch 81000 — loss 0.001611 — update_norm 1.99e-05
+    Epoch 82000 — loss 0.001591 — update_norm 1.96e-05
+    Epoch 83000 — loss 0.001572 — update_norm 1.94e-05
+    Epoch 84000 — loss 0.001553 — update_norm 1.92e-05
+    Epoch 85000 — loss 0.001535 — update_norm 1.89e-05
+    Epoch 86000 — loss 0.001517 — update_norm 1.87e-05
+    Epoch 87000 — loss 0.001499 — update_norm 1.85e-05
+    Epoch 88000 — loss 0.001482 — update_norm 1.83e-05
+    Epoch 89000 — loss 0.001465 — update_norm 1.81e-05
+    Epoch 90000 — loss 0.001449 — update_norm 1.79e-05
+    Epoch 91000 — loss 0.001433 — update_norm 1.77e-05
+    Epoch 92000 — loss 0.001417 — update_norm 1.75e-05
+    Epoch 93000 — loss 0.001402 — update_norm 1.73e-05
+    Epoch 94000 — loss 0.001387 — update_norm 1.71e-05
+    Epoch 95000 — loss 0.001372 — update_norm 1.69e-05
+    Epoch 96000 — loss 0.001358 — update_norm 1.68e-05
+    Epoch 97000 — loss 0.001343 — update_norm 1.66e-05
+    Epoch 98000 — loss 0.001330 — update_norm 1.64e-05
+    Epoch 99000 — loss 0.001316 — update_norm 1.62e-05
+    Stopping at epoch 100000: update_norm=1.61e-05, rel_loss_change=1.01e-05
+
+
+
+```python
+# --- Evaluation on test set ---
+
+# 1) Compute predicted probabilities
+z_test   = X_test.dot(w) + b
+y_prob   = sigmoid(z_test)
+
+# 2) Convert to binary predictions at threshold 0.5
+y_pred   = (y_prob >= 0.5).astype(int)
+
+# 3) Compute accuracy
+accuracy = np.mean(y_pred == y_test)
+print(f"Test accuracy: {accuracy:.4f}")
+
+from sklearn.metrics import (
+    confusion_matrix,
+    classification_report,
+    roc_auc_score,
+    roc_curve,
+    log_loss
+)
+
+# 1) Confusion matrix and classification report (avoid warnings)
+print("Confusion matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+print("\nClassification report:")
+print(classification_report(
+    y_test, 
+    y_pred, 
+    digits=4, 
+    zero_division=0            # fill precision/recall with 0 instead of warning
+))
+```
+
+    Test accuracy: 0.5300
+    Confusion matrix:
+    [[ 0  0]
+     [47 53]]
+    
+    Classification report:
+                  precision    recall  f1-score   support
+    
+               0     0.0000    0.0000    0.0000         0
+               1     1.0000    0.5300    0.6928       100
+    
+        accuracy                         0.5300       100
+       macro avg     0.5000    0.2650    0.3464       100
+    weighted avg     1.0000    0.5300    0.6928       100
+    
+
+
+
+```python
+# Compare against scikit-learn’s LogisticRegression
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    classification_report,
+    roc_auc_score,
+    log_loss
+)
+
+# 1) Instantiate and train
+clf = LogisticRegression(
+    penalty='l2',       # ℓ2 regularization
+    C=1.0,               # inverse regularization strength
+    solver='lbfgs',      # good default for small-to-medium datasets
+    max_iter=100000,
+    random_state=0
+)
+clf.fit(X_train, y_train)
+
+# 2) Make predictions
+y_pred_prob = clf.predict_proba(X_test)[:, 1]   # probability for class “1”
+y_pred      = clf.predict(X_test)
+
+# 3) Evaluate
+print(f"Accuracy: {accuracy_score(y_test, y_pred):.4f}")
+
+print("\nConfusion matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+print("\nClassification report:")
+print(classification_report(
+    y_test,
+    y_pred,
+    digits=4,
+    zero_division=0
+))
+
+```
+
+    Accuracy: 0.5000
+    
+    Confusion matrix:
+    [[ 0  0]
+     [50 50]]
+    
+    Classification report:
+                  precision    recall  f1-score   support
+    
+               0     0.0000    0.0000    0.0000         0
+               1     1.0000    0.5000    0.6667       100
+    
+        accuracy                         0.5000       100
+       macro avg     0.5000    0.2500    0.3333       100
+    weighted avg     1.0000    0.5000    0.6667       100
+    
+
 
 
 ```python
