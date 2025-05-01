@@ -7,11 +7,24 @@ Recall the definition of conditional probability:
 where $\cap$ means "intersection."
 ##### a. Prove that $ P(A \cap B \cap C) \;=\; P(A \mid B, C)\,P(B \mid C)\,P(C) $
 
-
+$$ P(A \cap (B \cap C)) $$
+$$ = P(A \mid B, C)P(B \cap C) $$ 
+$$ = P(A \mid B, C)\,P(B \mid C)\,P(C) $$
 
 ##### b. Derive Bayes’ Theorem from the law of conditional probability, and define each term in the equation with a 1-sentence description.
 
+The definition of conditional probability: 
+$$ P(A \mid B) \;=\; \frac{P(A, B)}{P(B)} $$
+It is equally valid to say:
+$$ P(B \mid A) \;=\; \frac{P(A, B)}{P(A)} $$
+Solving for $ P(A, B) $ in the two equations allows $ P(A, B) $ to be expressed in two equivalent ways:
+$$ P(A \mid B)P(B) = P(B \mid A)P(A) $$
+Rearranging the above equation yields Bayes’ Theorem:
+$$ P(A \mid B) = \frac{P(B \mid A) P(A)}{P(B)} $$
 
+- $ P(A) $ and $ P(B) $ are the unconditional probabilities of those two events.
+- $P(B \mid A)$ is the probability of $B$ given that we know $A$.
+- $P(A \mid B)$ is the probability of $A$ given that we know $B$.
 
 ### 2. Total Probability
 Let’s say I have two six-sided dice: one is fair, one is loaded. The loaded die has:
@@ -30,12 +43,22 @@ probability that the coin flip is heads is $ p \in [0, 1] $.
 *Hint*: Recall that the expected value $ E[X] $ of a discrete random variable $ X $ (e.g., a coin flip) can be computed as
 $$ E[X] = \sum_{i} x_i \, P(X = x_i) $$
 
-
+The probability that the coin flips head is $p$, that it flips tails is $(1-p)$.
+Let $X$ be the die-roll outcome, and And $ E[X] $ be the expectation of the die roll.
+$$ E[X] = E[X \mid Heads]P(Heads) + E[X \mid Tails]P(Tails) $$
+$$ = (1 + 2 + 3 + 4 + 5 + 6)(\frac{1}{6})p $$
+$$ + ((6)(\frac{1}{2}) + (1 + 2 + 3 + 4 + 5)(\frac{1}{10}))(1-p) $$
+$$ = \frac{7}{2}p + \frac{9}{2}(1-p)$$
+$$ = \frac{9}{2} - p$$
 
 ##### b. What is the variance of the die roll, in terms of p?
 *Hint*: Recall that the variance $ Var(X) $ of a random variable X can be computed as $$ Var(X) = E[X^2] - (E[X])^2 $$
 
-
+$$ E[X^2] = (1^2 + 2^2 + 3^2 + 4^2 + 5^2 + 6^2)(\frac{1}{6})p + ((6^2)(\frac{1}{2}) + (1^2 + 2^2 + 3^2 + 4^2 + 5^2)(\frac{1}{10}))(1-p) $$
+$$ = \frac{91}{6}p + \frac{47}{2}(1-p) = \frac{47}{2} - \frac{25}{3}p$$
+$$ (E[X])^2 = (\frac{9}{2} - p)^2 = \frac{81}{4} - 9p + p^2 $$
+$$ Var(X) = \frac{47}{2} - \frac{25}{3}p - \frac{81}{4} + 9p - p^2 $$
+$$ = \frac{13}{4} + \frac{2}{3}p - p^2$$
 
 ### 3. Naive Bayes
 Consider the learning function $ f(X) \to Y $, where class label $ Y \in \{T, F\} $ and $ X = \{x_1, x_2, \ldots, x_n \}$ , where $x_1$ is a boolean attribute and $ x_2, \ldots, x_n $ are continuous attributes.
@@ -43,11 +66,23 @@ Consider the learning function $ f(X) \to Y $, where class label $ Y \in \{T, F\
 ##### a. Assuming the continuous attributes are modeled as Gaussians, give and briefly explain the total number of parameters that you would need to estimate in order to classify a future observation using a Naive Bayes (NB) classifier.
 *Hint*: recall that a Naive Bayes classifier requires both the conditional probabilities $ P(X = x_i \mid Y) $ and the class prior probability $ P(Y) $
 
+1. One parameter is needed for the class prior, $P(Y)$.
+2. Two parameters are needed for boolean attribute $x_1$ (1 parameter per class)
+3. For the continuous attributes:
+   - There are $n - 1$ attributes
+   - Each univariate Gaussian has two parameters (mean and variance)
+   - Two parameters are needed for the two classes
+   - Thus, $ (2)(n-1)(2) = 4n - 4 $ parameters are needed.
 
+Summing each of these yields $ 4n - 1 $ total parameters.
 
 ##### b. How many more parameters would be required without the conditional independence assumption? No need for an exact number; an order of magnitude estimate will suffice.
 
+Without conditional independence, you would need
+- A mean vector of length $n-1$
+- A full covariance matrix with $ \frac{(n-1)(n-1+1)}{2} $ entries
 
+Yielding a bound of $O(n^2)$
 
 ### 4. Logistic Regression
 In Logistic Regression (LR), we assume the observations are independent of each other (not *conditionally* independent, just independent).
@@ -57,18 +92,27 @@ $$ w_0 + \sum_{i} w_i X_i $$
 ##### where $ Y \in \{0, 1 \} $, and the quantity of the sum in the above equation will determine whether LR predicts 1 or 0.
 *Hint*: Recall that $$ P(Y = 0 \mid X) \;=\; \frac{1}{1 + \exp\!\bigl(w_0 + \sum_{i} w_i X_i\bigr)} $$ and that $ P(Y=0 \mid X) + P(Y = 1 \min X) = 1 $.
 
-
+Let $p = P(Y | X) = P(Y=1 | X)$, the probability that $Y=1$ given the parameters $X$.<br>
+Let $l$ denote the logit function. $l$ is defined as $l = ln($odds$)$.<br>
+**odds** is the ratio of the probability $p$ to the probability $\neg p$:
+$$ odds = \frac{p}{1-p} = \frac{P(Y=1 | X)}{P(Y=0 | X)}$$
+Given the definition of $P(Y = 0 \mid X)$, the above can be simplified to:
+$$ odds = \textrm{exp}(w_0 + \sum_i w_i X_i)$$
+Plugging that in to the logit function yields the linear bound:
+$$ l = ln(\textrm{exp}(w_0 + \sum_i w_i X_i)) = w_0 + \sum_i w_i X_i $$
 
 ##### b. *Briefly* describe one advantage and one disadvantage of LR compared to NB (two sentences total is plenty).
 
-
+- Logistic regression learns the chance of each label directly from the data without treating features as independent, so it often gives more accurate predictions when features interact or don’t follow simple distributions
+- However, it must run an iterative optimization (e.g. gradient descent) to find its weights, which is slower and can overfit on small datasets, whereas Naive Bayes just counts occurrences and has a closed-form solution
 
 ### 5. Coding
 In this problem you will implement Logistic Regression (LR) for a document classification task.
 
 ##### a. Imagine a certain word is never observed during training, but appears in a testing set. What will happen when the NB classifier predicts the probability of the word? Explain. Will LR have the same problem? Why or why not?
 
-
+- With a NB classifier, a new word would collapse the product of probabilities of all words to 0, meaning the model would not be able to distinguish between classes.
+- LR uses weights to classify words into one of two classes. A new word would simply be unweighted, and does not zero out the output.
 
 ##### b. Implement LR.
 This script should accept three arguments, in the following order:
@@ -176,19 +220,10 @@ import numpy as np
 
 STEP_SIZE = 0.0001
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = "Homework 1",
-        epilog = "CSCI 4360/6360 Data Science II",
-        add_help = "How to use",
-        prog = "python homework1.py [train-data] [train-label] [test-data]")
-    parser.add_argument("paths", nargs = 3)
-    args = vars(parser.parse_args())
-
-    # Here's how you can pull the command line arguments to Python variables:
-    #
-    # training_data_file = args["paths"][0]
-    # training_label_file = args["paths"][1]
-    # testing_data_file = args["paths"][2]
+train_data_file  = "./data/train.data"
+train_label_file = "./data/train.label"
+test_data_file   = "./data/test_partial.data"
+test_label_file = "./data/test_partial.data"
 ```
 
 
