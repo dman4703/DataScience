@@ -345,7 +345,7 @@ $$
 ![two-part performance study on the Allstate 10M dataset, showing how cache‐aware data layout speeds up split‐finding in both the exact and approximate algorithms as you increase parallelism (y-axis: seconds per tree, log scale; x-axis: number of threads)](./pics/cacheAware_plots.png)
 - Exact greedy plot: can see that even at 1 thread, the cache-aware version is ~2$\times$ faster than the baseline, and both scale nicely up to 16 threads.
 - Approximate greedy plot: 
-    -  each curve is an $\epsilon$-approximation using presorted blocks of different sizes ($2^12$, $2^16$, $2^20$, $2^24$)
+    -  each curve is an $\epsilon$-approximation using presorted blocks of different sizes ($2^{12}$, $2^{16}$, $2^{20}$, $2^{24}$)
     -  Smaller blocks give lighter per-thread workloads but at some point pay for more cache‐miss overhead; larger blocks need so much data they thrash the cache
     -  The middle block sizes hit the sweet spot—fastest overall and good scaling
 
