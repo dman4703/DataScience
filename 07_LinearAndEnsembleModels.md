@@ -97,7 +97,7 @@ $$ (A^TA)\hat{\beta} = A^TY $$
 - If ($A^TA$) is invertible, this is easily solved!
 $$\hat{\beta} = (A^TA)^{-1}A^TY$$
 - **When is ($A^TA$) invertible?**
-- When A is full rank
+    - When A is full rank
 ---
 #### Geometric Interpretation
 $$ \hat f_{n}^{L}(X) = X\,\hat\beta = X\,(A^{T}A)^{-1}A^{T}Y $$
@@ -108,7 +108,9 @@ $$ \hat f_{n}^{L}(X) = X\,\hat\beta = X\,(A^{T}A)^{-1}A^{T}Y $$
     - Unspoken was the assumption that is is also *small*
 - What about when $(A^TA)$ is invertible, but very large?
 - **Gradient descent!** $J(\beta)$ is convex!
+
 Initialize: $\beta^0$
+
 Update:
 $$\beta^{t+1}\;=\;\beta^{t}\;-\;\frac{\alpha}{2}\left.\frac{\partial J(\beta)}{\partial \beta}\right|_{t}\;=\;\beta^{t} \;-\;\alpha\,A^{T}\bigl(A\beta^{t} - Y\bigr)$$
 
