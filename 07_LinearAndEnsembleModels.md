@@ -210,7 +210,7 @@ $$
     -  weight each training example by how incorrectly it was classified
     - learn a weak hypothesis (classifier) $h_t$
     - a strength of the hypothesis $a_t$
-- Final classifier: $$ H(X) \;=\; \operatorname{sign}\!\Bigl(\sum_{t}\alpha_{t}\,h_{t}(X)\Bigr) $$
+- Final classifier: $$ H(X) \;=\; \operatorname{sign}\!\Bigl(\sum\alpha_{t}\,h_{t}(X)\Bigr) $$
 
 ### Boosting example
 ![step-by-step toy illustration of AdaBoost learning three decision stumps on a simple 2D binary problem and then combining them into one nonlinear boundary](./pics/boosting_example.png)
