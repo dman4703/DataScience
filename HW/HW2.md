@@ -164,20 +164,156 @@ Once you’ve learned $C$, $X$, and $A$, use these parameters to simulate one ti
 
 ```python
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy.linalg import svd
+
+# ----------------------------------------------------------
+# 1. Load the training clip  (adjust the path if needed)
+# ----------------------------------------------------------
+video = np.load("./dt1_train.npy")      # shape: (f, h, w)
+f, h, w = video.shape
+
+# ----------------------------------------------------------
+# 2. Build the data matrix Y (pixel trajectories as rows)
+# ----------------------------------------------------------
+Y = video.transpose(1, 2, 0).reshape(h * w, f)   # (hw, f)
+
+# ----------------------------------------------------------
+# 3. Singular‑value decomposition
+# ----------------------------------------------------------
+_, S, _ = svd(Y, full_matrices=False)            # S: length f (≤ min(hw, f))
+
+# ----------------------------------------------------------
+# 4. Cumulative energy curve  E(q) = Σ_{i=1..q} S_i² / Σ S_i²
+# ----------------------------------------------------------
+energy = np.cumsum(S ** 2) / np.sum(S ** 2)
+
+# ----------------------------------------------------------
+# 5. Plot
+# ----------------------------------------------------------
+import matplotlib.pyplot as plt
+plt.figure(figsize=(6, 4))
+plt.plot(np.arange(1, len(S) + 1), energy, marker="o")
+plt.axhline(0.90, color="gray", linestyle="--", label="90 % energy")
+plt.xlabel("q  (number of singular vectors / state dims)")
+plt.ylabel("Cumulative energy captured")
+plt.title("Scree plot – choose the smallest q near the elbow")
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.tight_layout()
+plt.show()
+```
+
+
+    
+![png](output_16_0.png)
+    
+
+
+
+```python
+import numpy as np
 from scipy.linalg import pinv, svd # Your only additional allowed imports!
 
 input_file  = "./dt1_train.npy"      # or the other array, "./dt2_train.npy"
-q           = 5                      # number of state-space dimensions
-output_file = "./dt1_pred_q5.npy"    # wherever you want to save
 
-# Read in the dynamic texture data.
-M = np.load(input_file)
+# ------------------------------------------------------------------
+# 1. Load video and build the data matrix Y  (pixel‑trajectories as rows)
+# ------------------------------------------------------------------
+M = np.load(input_file)                # (f, h, w)
+f, h, w = M.shape
+Y = M.transpose(1, 2, 0).reshape(h * w, f)   # (hw, f)
 
-### FINISH ME
+# ------------------------------------------------------------------
+# 2. Appearance model  Y = U Σ Vᵀ
+#    keep first q left‑singular vectors  →  C  (hw × q)
+#    project frames into state space    →  X  (q  × f)
+# ------------------------------------------------------------------
+U, S, Vt = svd(Y, full_matrices=False)       # U: (hw, f)
+
+# 2a. determine a good value for q ---------------------------------
+energy = np.cumsum(S ** 2) / np.sum(S ** 2)
+# plot
+plt.figure(figsize=(6, 4))
+plt.plot(np.arange(1, len(S) + 1), energy, marker="o")
+plt.axhline(0.90, color="gray", linestyle="--", label="90 % energy")
+plt.xlabel("q  (number of singular vectors / state dims)")
+plt.ylabel("Cumulative energy captured")
+plt.title("Scree plot")
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.tight_layout()
+plt.show()
+# ------------------------------------------------------------------
 ```
 
+
+    
+![png](output_17_0.png)
+    
+
+
+
+```python
+q = 7                      # number of state-space dimensions
+C = U[:, :q]                                 # (hw, q)
+X = np.diag(S[:q]) @ Vt[:q, :]               # (q,  f)
+
+# ------------------------------------------------------------------
+# 3. State transition  x_t = A x_{t-1}
+#    Solve least‑squares  A = X₂ X₁⁺
+# ------------------------------------------------------------------
+X1 = X[:, :-1]          # x₁ … x_{f-1}   (q × (f−1))
+X2 = X[:,  1:]          # x₂ … x_f       (q × (f−1))
+A  = X2 @ pinv(X1)      # (q × q)
+
+# ------------------------------------------------------------------
+# 4. 1‑step prediction in state space  →  back to pixel space
+# ------------------------------------------------------------------
+x_next = A @ X[:, -1]                     # (q,)
+y_next = C @ x_next                       # (hw,)
+frame  = y_next.reshape(h, w)             # (h, w)
+
+# ------------------------------------------------------------------
+# 5. Save and done
+# ------------------------------------------------------------------
+output_file = "./dt1_pred_q7.npy"    # wherever you want to save
+np.save(output_file, frame)
+
+# ------------------------------------------------------------------
+# 6. Visualize original‑vs‑predicted frame
+# ------------------------------------------------------------------
+orig_frame = M[-1]                # ground‑truth frame at time f   (h, w)
+pred_frame = frame                # your 1‑step prediction        (h, w)
+diff       = pred_frame - orig_frame
+
+fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+axes[0].imshow(orig_frame, cmap="gray")
+axes[0].set_title("Original frame  $y_f$")
+axes[0].axis("off")
+
+axes[1].imshow(pred_frame, cmap="gray")
+axes[1].set_title("Predicted frame  $\hat y_{f+1}$")
+axes[1].axis("off")
+
+im = axes[2].imshow(diff, cmap="bwr")          # red = over‑prediction, blue = under
+axes[2].set_title("Difference (pred ‑ orig)")
+axes[2].axis("off")
+fig.colorbar(im, ax=axes[2], shrink=0.75, label="pixel error")
+
+plt.suptitle(f"1‑step LDS prediction  (q = {q})", fontsize=14)
+plt.tight_layout()
+plt.show()
+```
+
+
+    
+![png](output_18_0.png)
+    
+
+
 ##### Bonus 1
-Re-formulate your LDS implementation so that it also learns $W\vec{v}_t$, the driving noise parameter in the state space model. Recall that this first relies on the one-step prediction error: $$  $$ which is used to compute the covariance matrix of the driving noise: $$ \vec{p}_t = \vec{x}_{t+1} - A\vec{x}_t $$ which is used to compute the covariance matrix of the driving noise: $$ Q \;=\; \frac{1}{f - 1}\sum_{t=1}^{f-1}\vec{p}_{t}\,\vec{p}_{t}^{T} $$
+Re-formulate your LDS implementation so that it also learns $W\vec{v}_t$, the driving noise parameter in the state space model. Recall that this first relies on the one-step prediction error: $$ \vec{p}_t = \vec{x}_{t+1} - A\vec{x}_t $$ which is used to compute the covariance matrix of the driving noise: $$ Q \;=\; \frac{1}{f - 1}\sum_{t=1}^{f-1}\vec{p}_{t}\,\vec{p}_{t}^{T} $$
 
 Perform a singular value decomposition of $ Q = U\Sigma V^{T} $, set $ W = U\sigma^{\frac{1}{2}} $, and $ \vec{v}_t \sim \mathcal{N}\bigl(0,I) $.
 
