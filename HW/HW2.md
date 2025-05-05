@@ -100,30 +100,51 @@ To "ignore" the appearance component, we must choose values for $C$ and $\vec{u}
 
 *Hint*: If there is no noise term, then each $\vec{x_t}$ can be written as $A\vec{x}_{t-1}$ for all $t$. Write a few of these out, then organize them into systems of equations.
 
+---
 
-```python
+Writing a few out:
+$$ \vec{x}_3 = A\vec{x}_2 $$
+$$ \vec{x}_4 = A\vec{x}_3 $$
+$$ \vec{x}_5 = A\vec{x}_4 $$
+$$ \ldots $$
+$$ \vec{x}_n = A\vec{x}_{n-1} $$
 
-```
+If the terms are collected into $X_{2}^{n} = [\vec{x}_2, \ldots, \vec{x}_n]$ and $X_{1}^{n-1} = [\vec{x}_1, \ldots, \vec{x}_{n-1}]$, where each matrix is of size $2 \times (n-1)$, the "stacked" equation becomes $$ X_{2}^{n} = AX_{1}^{n-1} $$
+
+Finally, take the pseudo‑inverse of $X_{1}^{n-1}$ (since $X_{1}^{n-1}$ when $ (n - 1) \gt 2$) to isolate $A$.
+$$ A = X_{2}^{n}(X_{1}^{n-1})^{\diamond} $$
+
+---
 
 An interesting property of any model is its behavior in the limit. Those familiar with certain dimensionality reduction strategies will notice the simplified autoregressive model from the previous step looks an awful lot like a power iteration for finding approximate eigenvalues and eigenvectors of a matrix: if $M$ is your matrix of interest, you can iteratively update a vector $\vec{v}$ such that $\vec{v}_{t+1} = M\vec{v}_t$, and each additional iteration will bring $\vec{v}$ closer to the true leading eigenvector of $M$.
 
 Assuming $M$ is invertible, we have the full eigen-decomposition of $M = U\Sigma U^{T}$, where $U$ is the matrix of eigenvectors $[\vec{u}_1, \ldots, \vec{u}_n]$, and $\Sigma$ is the diagonal matrix of eigenvalues $\lambda_{1}, \ldots, \lambda_{n}$ sorted in descending order $\lambda_{1} \ge \lambda_{2} \ge \dots \ge \lambda_{n}$.
 
-##### b. Write out the equation for $\vec{v}_{t+2}$ using **only** $M$ and $\vec{v}_t$. Do the same for $\vec{v}_{t+3}$. Describe how this generalizes for $n$ steps. What is happening in terms of $M$?
+##### c. Write out the equation for $\vec{v}_{t+2}$ using **only** $M$ and $\vec{v}_t$. Do the same for $\vec{v}_{t+3}$. Describe how this generalizes for $n$ steps. What is happening in terms of $M$?
 
+---
 
-```python
+$$ \vec{v}_{t+1} = M\vec{v}_t $$
+$$ \vec{v}_{t+2} = M\vec{v}_{t+1} = M^{2}\vec{v}_t $$
+$$ \vec{v}_{t+3} = M\vec{v}_{t+2} = M^{3}\vec{v}_t $$
+$$ \ldots $$
+$$ \vec{v}_{t+n} = M\vec{v}_{t+2} = M^{n}\vec{v}_t $$
 
-```
+Thus, for $n$ iterations, $\vec{v}_{t+n}$ will be equal to $\vec{v}_t$ multiplied by $n$ copies of $M$. This makes it easy to calculate $\vec{v}_{t+n}$ for any $n$ without looping frame‑by‑frame.
 
-##### c. Now, rewrite those same equations, but instead of $M$, use its eigen-decomposition form. What happen as the number of iterations $n \rightarrow \infty$? What does this mean if there are eigenvalues $\lambda_i \lt 1$? What if $\lambda_i = 1$? What if $\lambda_i > 1$? What is therefore happening to the corresponding eigenvectors $\vec{u}_i$ of $\lambda_i$? (Note: $n \rightarrow \infty$? is known as the *steady state*)<br>
+---
+
+##### d. Now, rewrite those same equations, but instead of $M$, use its eigen-decomposition form. What happen as the number of iterations $n \rightarrow \infty$? What does this mean if there are eigenvalues $\lambda_i \lt 1$? What if $\lambda_i = 1$? What if $\lambda_i > 1$? What is therefore happening to the corresponding eigenvectors $\vec{u}_i$ of $\lambda_i$? (Note: $n \rightarrow \infty$? is known as the *steady state*)<br>
 
 *Hint*: The eigenvector matrix $U$ has the property $U^{T}U = UU^{T} = I$, where $I$ is the identity matrix.
 
+$$ \vec{v}_{t+1} = U\Sigma U^{T}\vec{v}_t $$
+$$ \vec{v}_{t+2} = U\Sigma U^{T}\vec{v}_{t+1} = U\Sigma U^{T}U\Sigma U^{T}\vec{v}_t = U\Sigma^{2}U^{T}\vec{v}_t $$
+$$ \vec{v}_{t+3} = U\Sigma^{3}U^{T}\vec{v}_t $$
+$$ \ldots $$
+$$ \vec{v}_{t+n} = U\Sigma^{n}U^{T}\vec{v}_t $$
 
-```python
 
-```
 
 ### 3. Coding
 
