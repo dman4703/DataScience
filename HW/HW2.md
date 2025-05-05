@@ -138,13 +138,20 @@ Thus, for $n$ iterations, $\vec{v}_{t+n}$ will be equal to $\vec{v}_t$ multiplie
 
 *Hint*: The eigenvector matrix $U$ has the property $U^{T}U = UU^{T} = I$, where $I$ is the identity matrix.
 
+---
+
 $$ \vec{v}_{t+1} = U\Sigma U^{T}\vec{v}_t $$
 $$ \vec{v}_{t+2} = U\Sigma U^{T}\vec{v}_{t+1} = U\Sigma U^{T}U\Sigma U^{T}\vec{v}_t = U\Sigma^{2}U^{T}\vec{v}_t $$
 $$ \vec{v}_{t+3} = U\Sigma^{3}U^{T}\vec{v}_t $$
 $$ \ldots $$
 $$ \vec{v}_{t+n} = U\Sigma^{n}U^{T}\vec{v}_t $$
 
+Decomposing $M$ makes the power iteration easier to visualize. Specifically, $\lambda_i$ is raised to the power $n$. Thus, as $n \rightarrow \infty$,
+- The state decays to 0 when $\lambda_i \lt 1$
+- The state stays the same when $\lambda_i = 1$
+- The state blows up when $\lambda_i \gt 1$
 
+---
 
 ### 3. Coding
 
