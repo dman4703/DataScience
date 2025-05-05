@@ -206,7 +206,7 @@ plt.show()
 
 
 ```python
-q = 7                      # number of state-space dimensions
+q = 7                      # number of state-space dimensions ; ~96% cumulative energy captured
 C = U[:, :q]                                 # (hw, q)
 X = np.diag(S[:q]) @ Vt[:q, :]               # (q,  f)
 
@@ -318,7 +318,7 @@ plt.tight_layout();  plt.show()
 ```
 
     MSE deterministic: 23.559021
-    MSE with noise   : 23.057670
+    MSE with noise   : 119.091140
 
 
 
@@ -338,5 +338,269 @@ Implement the same 1-step prediction as before, this time with the second-order 
 
 
 ```python
+# ------------------------------------------------------------------
+# BONUS 2 – second‑order LDS:  x_{t+1} = A1 x_t + A2 x_{t-1}
+# ------------------------------------------------------------------
+assert f >= 3, "Need ≥3 frames for a 2‑nd‑order model"
 
+# 1.  Build the stacked “design” matrix  Z = [ X₂ ; X₁ ]
+X_tm2 = X[:, :-2]          # x₁ … x_{f-2}      (q × (f‑2))
+X_tm1 = X[:, 1:-1]         # x₂ … x_{f-1}      (q × (f‑2))
+X_t    = X[:, 2:]          # x₃ … x_f          (q × (f‑2))
+
+Z = np.vstack((X_tm1, X_tm2))   # (2q × (f‑2))
+
+# 2.  Least‑squares solve:  [A1 A2] = X_t  ·  Z⁺
+A12 = X_t @ pinv(Z)             # (q × 2q)
+A1, A2 = A12[:, :q], A12[:, q:] # split into the two q×q blocks
+
+# 3.  1‑step prediction with the 2‑nd‑order model
+x_next_2nd = A1 @ X[:, -1] + A2 @ X[:, -2]   # (q,)
+y_next_2nd = C @ x_next_2nd                  # (hw,)
+frame_2nd  = y_next_2nd.reshape(h, w)        # (h, w)
+
+# ------------------------------------------------------------------
+# 4.  Save & quick accuracy check
+# ------------------------------------------------------------------
+output_file_2nd = "./dt1_pred_q7_AR2.npy"
+np.save(output_file_2nd, frame_2nd)
+
+mse_2nd = np.mean((frame_2nd - orig_frame) ** 2)
+print(f"MSE deterministic (AR‑1) : {mse_det :.6f}")
+print(f"MSE with noise     (AR‑1) : {mse_sto :.6f}")
+print(f"MSE deterministic (AR‑2) : {mse_2nd:.6f}")
+
+# optional visual comparison
+fig, axes = plt.subplots(1, 4, figsize=(16, 4))
+axes[0].imshow(orig_frame, cmap="gray");      axes[0].set_title("Original");      axes[0].axis("off")
+axes[1].imshow(pred_frame, cmap="gray");      axes[1].set_title("AR‑1");          axes[1].axis("off")
+axes[2].imshow(frame_stoch, cmap="gray");     axes[2].set_title("AR‑1 + noise");  axes[2].axis("off")
+axes[3].imshow(frame_2nd, cmap="gray");       axes[3].set_title("AR‑2");          axes[3].axis("off")
+plt.suptitle(f"2‑nd‑order LDS prediction  (q = {q})")
+plt.tight_layout();  plt.show()
 ```
+
+    MSE deterministic (AR‑1) : 23.559021
+    MSE with noise     (AR‑1) : 119.091140
+    MSE deterministic (AR‑2) : 23.638767
+
+
+
+    
+![png](output_21_1.png)
+    
+
+
+---
+##### dt2
+
+
+```python
+input_file  = "./dt2_train.npy"
+
+# ------------------------------------------------------------------
+# 1. Load video and build the data matrix Y  (pixel‑trajectories as rows)
+# ------------------------------------------------------------------
+M = np.load(input_file)                # (f, h, w)
+f, h, w = M.shape
+Y = M.transpose(1, 2, 0).reshape(h * w, f)   # (hw, f)
+
+# ------------------------------------------------------------------
+# 2. Appearance model  Y = U Σ Vᵀ
+#    keep first q left‑singular vectors  →  C  (hw × q)
+#    project frames into state space    →  X  (q  × f)
+# ------------------------------------------------------------------
+U, S, Vt = svd(Y, full_matrices=False)       # U: (hw, f)
+
+# 2a. determine a good value for q ---------------------------------
+energy = np.cumsum(S ** 2) / np.sum(S ** 2)
+# plot
+plt.figure(figsize=(6, 4))
+plt.plot(np.arange(1, len(S) + 1), energy, marker="o")
+plt.axhline(0.90, color="gray", linestyle="--", label="90 % energy")
+plt.xlabel("q  (number of singular vectors / state dims)")
+plt.ylabel("Cumulative energy captured")
+plt.title("Scree plot")
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.tight_layout()
+plt.show()
+# ------------------------------------------------------------------
+```
+
+
+    
+![png](output_23_0.png)
+    
+
+
+
+```python
+q = 15                      # number of state-space dimensions; ~96% cumulative energy captured
+C = U[:, :q]                                 # (hw, q)
+X = np.diag(S[:q]) @ Vt[:q, :]               # (q,  f)
+
+# ------------------------------------------------------------------
+# 3. State transition  x_t = A x_{t-1}
+#    Solve least‑squares  A = X₂ X₁⁺
+# ------------------------------------------------------------------
+X1 = X[:, :-1]          # x₁ … x_{f-1}   (q × (f−1))
+X2 = X[:,  1:]          # x₂ … x_f       (q × (f−1))
+A  = X2 @ pinv(X1)      # (q × q)
+
+# ------------------------------------------------------------------
+# 4. 1‑step prediction in state space  →  back to pixel space
+# ------------------------------------------------------------------
+x_next = A @ X[:, -1]                     # (q,)
+y_next = C @ x_next                       # (hw,)
+frame  = y_next.reshape(h, w)             # (h, w)
+
+# ------------------------------------------------------------------
+# 5. Save and done
+# ------------------------------------------------------------------
+output_file = "./dt2_pred_q15.npy"    # wherever you want to save
+np.save(output_file, frame)
+
+# ------------------------------------------------------------------
+# 6. Visualize original‑vs‑predicted frame
+# ------------------------------------------------------------------
+orig_frame = M[-1]                # ground‑truth frame at time f   (h, w)
+pred_frame = frame                # your 1‑step prediction        (h, w)
+diff       = pred_frame - orig_frame
+
+fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+axes[0].imshow(orig_frame, cmap="gray")
+axes[0].set_title("Original frame  $y_f$")
+axes[0].axis("off")
+
+axes[1].imshow(pred_frame, cmap="gray")
+axes[1].set_title("Predicted frame  $\hat y_{f+1}$")
+axes[1].axis("off")
+
+im = axes[2].imshow(diff, cmap="bwr")          # red = over‑prediction, blue = under
+axes[2].set_title("Difference (pred ‑ orig)")
+axes[2].axis("off")
+fig.colorbar(im, ax=axes[2], shrink=0.75, label="pixel error")
+
+plt.suptitle(f"1‑step LDS prediction  (q = {q})", fontsize=14)
+plt.tight_layout()
+plt.show()
+```
+
+
+    
+![png](output_24_0.png)
+    
+
+
+
+```python
+# ------------------------------------------------------------------
+# 1 – learn driving‑noise matrix W  and do a *stochastic*
+#              one‑step prediction  x_{t+1} = A x_t + W v_t
+# ------------------------------------------------------------------
+# 1 a. one‑step residuals  p_t = x_{t+1} – A x_t
+P = X[:, 1:] - (A @ X[:, :-1])                        # shape (q, f‑1)
+
+# 1 b. empirical covariance of driving noise   Q = (1/(f‑1)) Σ p_t p_tᵀ
+Q = (P @ P.T) / (f - 1)                              # (q, q)
+
+# 1 c. factor Q  →  W = U Σ^{½}   (so that W Wᵀ ≈ Q)
+Uq, Sq, _ = svd(Q)                                   # Sq: singular values (eigvals)
+W = Uq @ np.diag(np.sqrt(Sq))                        # (q, q)
+
+# 1 d. draw a standard‑normal noise vector  v_t  ~ 𝒩(0, I_q)
+v = np.random.randn(q)                               # reproducible? set np.random.seed
+
+# 1 e. stochastic 1‑step prediction in state space
+x_next_stoch = A @ X[:, -1] + W @ v                  # (q,)
+y_next_stoch = C @ x_next_stoch                      # (hw,)
+frame_stoch  = y_next_stoch.reshape(h, w)            # (h, w)
+
+# ------------------------------------------------------------------
+# 2. save the noisy prediction & simple accuracy check
+# ------------------------------------------------------------------
+output_file_stoch = "./dt2_pred_q15_noise.npy"
+np.save(output_file_stoch, frame_stoch)
+
+# compare MSE against the deterministic LDS prediction you made earlier
+mse_det  = np.mean((pred_frame - orig_frame)  ** 2)
+mse_sto  = np.mean((frame_stoch - orig_frame) ** 2)
+print(f"MSE deterministic: {mse_det:.6f}")
+print(f"MSE with noise   : {mse_sto:.6f}")
+
+# optional quick side‑by‑side visualization
+fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+axes[0].imshow(orig_frame, cmap="gray");  axes[0].set_title("Original");         axes[0].axis("off")
+axes[1].imshow(frame_stoch, cmap="gray"); axes[1].set_title("Pred + noise");     axes[1].axis("off")
+im = axes[2].imshow(frame_stoch - orig_frame, cmap="bwr")
+axes[2].set_title("Error (noisy)");       axes[2].axis("off")
+fig.colorbar(im, ax=axes[2], shrink=0.75)
+plt.suptitle(f"1‑step LDS with driving noise  (q = {q})")
+plt.tight_layout();  plt.show()
+```
+
+    MSE deterministic: 44.016705
+    MSE with noise   : 43.353038
+
+
+
+    
+![png](output_25_1.png)
+    
+
+
+
+```python
+# ------------------------------------------------------------------
+# BONUS 2 – second‑order LDS:  x_{t+1} = A1 x_t + A2 x_{t-1}
+# ------------------------------------------------------------------
+assert f >= 3, "Need ≥3 frames for a 2‑nd‑order model"
+
+# 1.  Build the stacked “design” matrix  Z = [ X₂ ; X₁ ]
+X_tm2 = X[:, :-2]          # x₁ … x_{f-2}      (q × (f‑2))
+X_tm1 = X[:, 1:-1]         # x₂ … x_{f-1}      (q × (f‑2))
+X_t    = X[:, 2:]          # x₃ … x_f          (q × (f‑2))
+
+Z = np.vstack((X_tm1, X_tm2))   # (2q × (f‑2))
+
+# 2.  Least‑squares solve:  [A1 A2] = X_t  ·  Z⁺
+A12 = X_t @ pinv(Z)             # (q × 2q)
+A1, A2 = A12[:, :q], A12[:, q:] # split into the two q×q blocks
+
+# 3.  1‑step prediction with the 2‑nd‑order model
+x_next_2nd = A1 @ X[:, -1] + A2 @ X[:, -2]   # (q,)
+y_next_2nd = C @ x_next_2nd                  # (hw,)
+frame_2nd  = y_next_2nd.reshape(h, w)        # (h, w)
+
+# ------------------------------------------------------------------
+# 4.  Save & quick accuracy check
+# ------------------------------------------------------------------
+output_file_2nd = "./dt2_pred_q15_AR2.npy"
+np.save(output_file_2nd, frame_2nd)
+
+mse_2nd = np.mean((frame_2nd - orig_frame) ** 2)
+print(f"MSE deterministic (AR‑1) : {mse_det :.6f}")
+print(f"MSE with noise     (AR‑1) : {mse_sto :.6f}")
+print(f"MSE deterministic (AR‑2) : {mse_2nd:.6f}")
+
+# optional visual comparison
+fig, axes = plt.subplots(1, 4, figsize=(16, 4))
+axes[0].imshow(orig_frame, cmap="gray");      axes[0].set_title("Original");      axes[0].axis("off")
+axes[1].imshow(pred_frame, cmap="gray");      axes[1].set_title("AR‑1");          axes[1].axis("off")
+axes[2].imshow(frame_stoch, cmap="gray");     axes[2].set_title("AR‑1 + noise");  axes[2].axis("off")
+axes[3].imshow(frame_2nd, cmap="gray");       axes[3].set_title("AR‑2");          axes[3].axis("off")
+plt.suptitle(f"2‑nd‑order LDS prediction  (q = {q})")
+plt.tight_layout();  plt.show()
+```
+
+    MSE deterministic (AR‑1) : 44.016705
+    MSE with noise     (AR‑1) : 43.353038
+    MSE deterministic (AR‑2) : 46.335063
+
+
+
+    
+![png](output_26_1.png)
+    
+
