@@ -164,55 +164,6 @@ Once you’ve learned $C$, $X$, and $A$, use these parameters to simulate one ti
 
 ```python
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.linalg import svd
-
-# ----------------------------------------------------------
-# 1. Load the training clip  (adjust the path if needed)
-# ----------------------------------------------------------
-video = np.load("./dt1_train.npy")      # shape: (f, h, w)
-f, h, w = video.shape
-
-# ----------------------------------------------------------
-# 2. Build the data matrix Y (pixel trajectories as rows)
-# ----------------------------------------------------------
-Y = video.transpose(1, 2, 0).reshape(h * w, f)   # (hw, f)
-
-# ----------------------------------------------------------
-# 3. Singular‑value decomposition
-# ----------------------------------------------------------
-_, S, _ = svd(Y, full_matrices=False)            # S: length f (≤ min(hw, f))
-
-# ----------------------------------------------------------
-# 4. Cumulative energy curve  E(q) = Σ_{i=1..q} S_i² / Σ S_i²
-# ----------------------------------------------------------
-energy = np.cumsum(S ** 2) / np.sum(S ** 2)
-
-# ----------------------------------------------------------
-# 5. Plot
-# ----------------------------------------------------------
-import matplotlib.pyplot as plt
-plt.figure(figsize=(6, 4))
-plt.plot(np.arange(1, len(S) + 1), energy, marker="o")
-plt.axhline(0.90, color="gray", linestyle="--", label="90 % energy")
-plt.xlabel("q  (number of singular vectors / state dims)")
-plt.ylabel("Cumulative energy captured")
-plt.title("Scree plot – choose the smallest q near the elbow")
-plt.grid(True, alpha=0.3)
-plt.legend()
-plt.tight_layout()
-plt.show()
-```
-
-
-    
-![png](output_16_0.png)
-    
-
-
-
-```python
-import numpy as np
 from scipy.linalg import pinv, svd # Your only additional allowed imports!
 
 input_file  = "./dt1_train.npy"      # or the other array, "./dt2_train.npy"
@@ -249,7 +200,7 @@ plt.show()
 
 
     
-![png](output_17_0.png)
+![png](output_16_0.png)
     
 
 
@@ -308,7 +259,7 @@ plt.show()
 
 
     
-![png](output_18_0.png)
+![png](output_17_0.png)
     
 
 
