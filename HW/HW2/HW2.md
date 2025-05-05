@@ -200,7 +200,7 @@ plt.show()
 
 
     
-![scree plot showing 97% at q=7](output_16_0.png)
+![png](output_16_0.png)
     
 
 
@@ -259,7 +259,7 @@ plt.show()
 
 
     
-![original and predicted frame displayed side by side](output_17_0.png)
+![png](output_17_0.png)
     
 
 
@@ -272,8 +272,60 @@ Implement the same 1-step prediction as before, this time with the noise term, s
 
 
 ```python
+# ------------------------------------------------------------------
+# 1 – learn driving‑noise matrix W  and do a *stochastic*
+#              one‑step prediction  x_{t+1} = A x_t + W v_t
+# ------------------------------------------------------------------
+# 1 a. one‑step residuals  p_t = x_{t+1} – A x_t
+P = X[:, 1:] - (A @ X[:, :-1])                        # shape (q, f‑1)
 
+# 1 b. empirical covariance of driving noise   Q = (1/(f‑1)) Σ p_t p_tᵀ
+Q = (P @ P.T) / (f - 1)                              # (q, q)
+
+# 1 c. factor Q  →  W = U Σ^{½}   (so that W Wᵀ ≈ Q)
+Uq, Sq, _ = svd(Q)                                   # Sq: singular values (eigvals)
+W = Uq @ np.diag(np.sqrt(Sq))                        # (q, q)
+
+# 1 d. draw a standard‑normal noise vector  v_t  ~ 𝒩(0, I_q)
+v = np.random.randn(q)                               # reproducible? set np.random.seed
+
+# 1 e. stochastic 1‑step prediction in state space
+x_next_stoch = A @ X[:, -1] + W @ v                  # (q,)
+y_next_stoch = C @ x_next_stoch                      # (hw,)
+frame_stoch  = y_next_stoch.reshape(h, w)            # (h, w)
+
+# ------------------------------------------------------------------
+# 2. save the noisy prediction & simple accuracy check
+# ------------------------------------------------------------------
+output_file_stoch = "./dt1_pred_q7_noise.npy"
+np.save(output_file_stoch, frame_stoch)
+
+# compare MSE against the deterministic LDS prediction you made earlier
+mse_det  = np.mean((pred_frame - orig_frame)  ** 2)
+mse_sto  = np.mean((frame_stoch - orig_frame) ** 2)
+print(f"MSE deterministic: {mse_det:.6f}")
+print(f"MSE with noise   : {mse_sto:.6f}")
+
+# optional quick side‑by‑side visualization
+fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+axes[0].imshow(orig_frame, cmap="gray");  axes[0].set_title("Original");         axes[0].axis("off")
+axes[1].imshow(frame_stoch, cmap="gray"); axes[1].set_title("Pred + noise");     axes[1].axis("off")
+im = axes[2].imshow(frame_stoch - orig_frame, cmap="bwr")
+axes[2].set_title("Error (noisy)");       axes[2].axis("off")
+fig.colorbar(im, ax=axes[2], shrink=0.75)
+plt.suptitle(f"1‑step LDS with driving noise  (q = {q})")
+plt.tight_layout();  plt.show()
 ```
+
+    MSE deterministic: 23.559021
+    MSE with noise   : 23.057670
+
+
+
+    
+![png](output_19_1.png)
+    
+
 
 ##### Bonus 2
 Re-formulate your LDS so that your state space model is a second-order autoregressive process. That is, your model should now be: $$ \vec{x}_{t+1} = A_{1}\vec{x}_{t} + A_{2}\vec{x}_{t-1} $$
