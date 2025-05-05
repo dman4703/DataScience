@@ -43,7 +43,7 @@ Linear regression seeks to find the parameter vector $\beta$ that provides the b
 
 When we throw in the $\epsilon$ error term, assuming it is drawn from independent and identically distributed (“i.i.d.”) Gaussians (i.e., $\epsilon_i \sim \mathcal{N}\bigl(0,\,\sigma^2\bigr)$), then the above solution is also the MLE estimate for $P\bigl(Y \mid X; \beta\bigr)$.
 
-All told, then, we can make predictions $\hat Y$ using $\hat\beta$ (X could be the training set, or new data altogether): $$\hat{Y} = X\hat{\beta} + \epsilon$$
+All told, then, we can make predictions $\hat Y$ using $\hat\beta$ ($X$ could be the training set, or new data altogether): $$\hat{Y} = X\hat{\beta} + \epsilon$$
 
 Now, when we perform least squares regression, we make certain idealized assumptions about the vector of error terms $\epsilon$, namely that each $\epsilon_i$ is i.i.d. according to $\mathcal{N}\bigl(0,\,\sigma^2\bigr)$ for some value of $\sigma$. In practice, these idealized assumptions often don’t hold, and when they fail, they can outright implode. An easy example and inherent drawback of Gaussians is that they are sensitive to outliers; as a result, noise with a “heavy tail” (more weight at the ends of the distribution than your usual Gaussian) will pull your regression weights toward it and away from its optimal solution.
 
@@ -57,17 +57,28 @@ In cases where the noise term $\epsilon_i$ can be arbitrarily large, you have a 
 
 *Hint 3*: Multiplying an equation by -1 will switch from “argmin” to “argmax” and vice versa.
 
+---
 
-```python
+Given the linear regression model $Y_i = X_{i}^{T}\beta + \epsilon_i$ ($X$ is a column), then $\epsilon_i = Y_i - X_{i}^T\beta$. Since we assume $\epsilon_i$ is i.i.d. drawn from a Laplace distribution, substituting it into $\mathrm{Lap}(0, b)$ gives the conditional density of $Y_i$ given $X_i$ and $\beta$: $$P(Y_i | X_i ; \beta) = \mathrm{Lap}(0, b) \;=\;\frac{1}{2b}\,\exp\!\Bigl(-\tfrac{|Y_i - X_{i}^T\beta|}{b}\Bigr)$$
 
-```
+To form the likelihood $\mathcal{L}(\beta)$ over the whole data set, simply take the product of all individual probability densities: 
+$$ \mathcal{L}(\beta) = \prod_{i=1}^{n}\frac{1}{2b}\exp\!\Bigl(-\frac{\lvert Y_{i} - \mathbf{X}_{i}^{T}\beta\rvert}{b}\Bigr) = \biggl(\frac{1}{2b}e^{-\frac{\lvert Y_{1}-X_{1}^{T}\beta\rvert}{b}}\biggr)\;\times\;\biggl(\frac{1}{2b}e^{-\frac{\lvert Y_{2}-X_{2}^{T}\beta\rvert}{b}}\biggr)\;\times\;\dots\;\times\;\biggl(\frac{1}{2b}e^{-\frac{\lvert Y_{n}-X_{n}^{T}\beta\rvert}{b}}\biggr) $$
+
+Next, take the log to get the log-likelihood $\mathcal{l}(\beta) = \log{\mathcal{L}(\beta)}$:
+$$ \mathcal{l}(\beta) = \sum_{i=1}^{n}[\log{\frac{1}{2b}} + \log{(\exp\!\Bigl(-\frac{\lvert Y_{i} - \mathbf{X}_{i}^{T}\beta\rvert}{b}\Bigr))}] = \sum_{i=1}^{n}\Bigl[-\log(2b)\;-\;\frac{1}{b}\,\bigl|\,Y_{i}-X_{i}^{T}\beta\bigr|\Bigr] $$
+
+We only care about the $ |Y_{i} - {X}_{i}^{T}\beta| $ term since it is the only part dependent on $\beta$. Simplifying and dropping constant terms gives $J_{\mathrm{Lap}}(\beta)$:
+$$J_{\mathrm{Lap}}(\beta) = \sum_{i=1}^n\bigl|Y_i - X_i^T\beta\bigr|$$
+
+---
 
 ##### b. Why do you think the above model provides a more robust fit to data compared to the standard model assuming the noise terms are distributed as Gaussians? Be specific!
 
+---
 
-```python
+By replacing the squared‑error penalty with an absolute‑error penalty, the Laplace‑noise model caps each observation’s leverage on the parameter estimates, so a handful of extreme (or mis‑recorded) points cannot hijack the regression line—thereby yielding a more robust fit than the standard Gaussian‑noise model.
 
-```
+---
 
 ### 2. Linear Dynamical Systems
 
@@ -77,12 +88,13 @@ The state component is nothing more than an autoregressive model, a linear combi
 
 ##### a. In the following questions, we’re going to use only the state component of the LDS (i.e., we’ll only use the second equation to model motion). How could we formalize “ignoring” the appearance component? What values could we use in the appearance component so that the original data $\vec{y_t}$ is also our state space data $\vec{x_t}$?
 
+---
 
-```python
+To "ignore" the appearance component, we must choose values for $C$ and $\vec{u}_t$ such that $\vec{y}_t = \vec{x}_t$. These values would be $C = I$, where $I$ is the identity matrix, and $\vec{u}_t = 0$.
 
-```
+---
 
-##### b. To simplify, let’s ignore the appearance component and focus on a toy example in two dimensions. Suppose each $\vec{x}_t$ is an $(x, y)$ pair from the plot. Set up the equations to solve for $A$ (Note: your solution should generalize to $n$ 2D points. Also, you can assume there is no noise term (i.e. $ W_{\vec{v}_t}=0 $)).
+##### b. To simplify, let’s ignore the appearance component and focus on a toy example in two dimensions. Suppose each $\vec{x}_t$ is an $(x, y)$ pair from the plot. Set up the equations to solve for $A$ (Note: your solution should generalize to $n$ 2D points. Also, you can assume there is no noise term (i.e. $ W{\vec{v}_t}=0 $)).
 
 <img src="./2D.png" alt="example toy sequence of 2D points" style="display: block; margin: 0 auto; width: 50%; max-width: 400px;"><br>
 
