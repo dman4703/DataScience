@@ -200,7 +200,7 @@ plt.show()
 
 
     
-![png](output_16_0.png)
+![scree plot showing 97% at q=7](output_16_0.png)
     
 
 
@@ -259,7 +259,7 @@ plt.show()
 
 
     
-![png](output_17_0.png)
+![original and predicted frame displayed side by side](output_17_0.png)
     
 
 
