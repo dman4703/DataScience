@@ -191,6 +191,7 @@ $$CC'(V, E)=\frac{\#\text{triangles in graph}}{\#\text{length-3 paths in graph}}
 - Inlinks from a “good” site are better than inlinks from a “bad” site
 - but inlinks from sites with many outlinks are not as “good”...
 - “Good” and “bad” are relative.
+
 ![random‐surfer model: Green smiley faces are the surfer’s “current location” on each page, Solid black arrows are ordinary hyperlinks the surfer might click](./pics/pageRank_randomSurferModel.png)
 - Imagine a “pagehopper” that always either
     - follows a random link, or
