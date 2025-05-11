@@ -111,7 +111,7 @@ In this problem, we’ll analyze how spectral clustering works on the simple dat
 
 ```
 
-##### b. The second step is to compute the first $k$ dominant eigenvectors of the affinity matrix, where $k$ is the number of clusters we want to have. For the dataset in the above figure, and the affinity matrix defined by the previous equation, is there a value of $\Theta$ for which you can analytically compute the first two eigenvalues and eigenvectors? If not, explain why not. If yes, compute and record these eigenvalues and eigenvectors. What are the other $((m_{1} + m_{2}) − k)$ eigenvalues? Explain briefly.
+##### b. The second step is to compute the first $k$ dominant eigenvectors of the affinity matrix, where $k$ is the number of clusters we want to have. For the dataset in **Figure 4**, and the affinity matrix defined by the previous equation, is there a value of $\Theta$ for which you can analytically compute the first two eigenvalues and eigenvectors? If not, explain why not. If yes, compute and record these eigenvalues and eigenvectors. What are the other $((m_{1} + m_{2}) − k)$ eigenvalues? Explain briefly.
 
 
 ```python
