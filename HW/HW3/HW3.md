@@ -98,7 +98,7 @@ The key insight here is that the eigenvectors of both $A$ and $\tilde{A}$ have t
 
 Spectral clustering embeds the original data points in a new space by using the coordinates of these eigenvectors. Specifically, it maps the point $\vec{x}_{i}$ to the point $[e_{1}(i), e_{2}(i), \ldots, e_{k}(i)]$, where $\vec{e}_{1}, \ldots, \vec{e}_{k}$ are the top $k$ eigenvectors of $A$. We refer to this mapping as the spectral embedding. See **Figure 3** for an example.
 
-![Figure 3: Using the eigenvectors of A to embed the data points; Notice that the points {a, b, c, d} are tightly clustered in this space. illustrats how we turn each original point (a, b, c, d) into a 2-D coordinate using the top two eigenvectors of the affinity matrix. Left side shows the two eigenvector coordinates (e1(i), e2(i)), Right side is the scatter-plot in the new “eigenvector space” (y-axis: e1, x-axis: e2).](./fig3.png)
+![Figure 3: Using the eigenvectors of A to embed the data points; Notice that the points {a, b, c, d} are tightly clustered in this space. illustrats how we turn each original point (a, b, c, d) into a 2-D coordinate using the top two eigenvectors of the affinity matrix. Left side shows the two eigenvector coordinates (e1(i), e2(i)), Right side is the scatter-plot in the new “eigenvector space” (y-axis: e1, x-axis: e2). Points a and b are on the e1 (y) axis; points c and d are on the e2 (x) axis.](./fig3.png)
 
 In this problem, we’ll analyze how spectral clustering works on the simple dataset shown in **Figure 4**.
 
