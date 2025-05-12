@@ -11,10 +11,12 @@ Which can be rewritten as: $$ J_{R}(\beta) = (X\beta - Y)^{T}(X\beta - Y) + \lam
 
 ##### a. Explain what happens as $\lambda \to 0$ and $\lambda \to \infty$ in terms of $J$, $J_{R}$, and $\beta$.
 
+---
 
-```python
+- When $\lambda \to 0$, $J_{R}(\beta)$ collapses to the unregularized $J(\beta)$.
+- When $\lambda \to \infty$, the data‑fit term $J(\beta)$ will be negligible against the very large penalty term $\lambda\| \beta \|^{2}$; this will shrink all coefficients smoothly towards $0$.
 
-```
+---
 
 Rather than viewing $\beta$ as a fixed but unknown parameter (i.e. something we need to solve for), we can consider $\beta$ as a random variable. In this setting, we can specify a prior distribution $P(\beta)$ on $\beta$ that expresses our prior beliefs about the types of values $\beta$ should take. Then, we can estimate $\beta$ as: $$ \beta_{\mathrm{MAP}} = \arg\max_{\beta}\prod_{i=1}^{n}P(Y_{i} \mid X_{i};\beta)P(\beta) $$ where MAP is the *maximum a posteriori* estimate.
 
@@ -25,20 +27,34 @@ Rather than viewing $\beta$ as a fixed but unknown parameter (i.e. something we 
 
 *Hint 2*: Logarithms nuke pesky terms with exponents without changing linear relationships
 
-*Hint 3*: Multiplying an equation by $-1$ will switch from “argmin” to “argmax” and vice versa.
+*Hint 3*: Multiplying an equation by $-1$ will switch from “$\arg\min$” to “$\arg\max$” and vice versa.
 
+---
 
-```python
+$$ \beta_{\mathrm{MAP}} = \arg\max_{\beta}\prod_{i=1}^{n}P(Y_{i} \mid X_{i};\beta)P(\beta) $$
+- Linear regression model is $Y_i = X_{i}^{T}\beta + \epsilon_i$, so $$ P(Y_{i} \mid X_{i};\beta) = \exp{(-\frac{1}{2\sigma^{2}}\sum_{i}^{n}(Y_i - X_{i}^{T}\beta)^{2})}$$
+- We assume $P(\beta) \sim \mathcal{N}(0, I\sigma^{2} / \lambda)$, so $$ P(\beta) = \exp{(-\frac{\lambda}{2\sigma^{2}}\| \beta \|^{2})} $$
+- Substitute those in and take the $\log$ of $P(Y_{i} \mid X_{i};\beta)P(\beta)$: $$ - \frac{1}{2\sigma^{2}}\sum_{i}^{n}(Y_i - X_{i}^{T}\beta)^{2} - \frac{\lambda}{2\sigma^{2}}\| \beta \|^{2} $$
+- So far, we have $$ \beta_{\mathrm{MAP}} = \arg\max_{\beta}[-\frac{1}{2\sigma^{2}}\sum_{i}(Y_i - X_{i}^{T}\beta)^{2} - \frac{\lambda}{2\sigma^{2}}\| \beta \|^{2}] $$
+- Multiply by $-2\sigma^{2}$ to switch to minimization, and note that the term being minimized is $J_{R}(\beta)$: $$ \beta_{\mathrm{MAP}} = \arg\min_{\beta}[\sum_{i}^{n}(Y_i - X_{i}^{T}\beta)^{2} + \lambda\| \beta \|^{2}] $$
 
-```
+---
 
 ##### c. What is the probabilistic interpretation of $\lambda \to 0$ under this model? What about $\lambda \to \infty$? Take note: this is asking a related but *different* question than **part a** of this problem!
 *Hint*: Consider how the prior $P(\beta)$ is affected by changing $\lambda$.
 
+---
 
-```python
+- When $\lambda \to 0$:
+    - Prior vairance approaches $\infty$
+    - thus no prior preference
+    - MAP = MLE = unregularized linear regression
+- When $\lambda \to \infty$:
+    - Prior variance approaches $0$
+    - extremely strong prior that all coefficients are zero
+    - MAP estimate shrinks completely to zero 
 
-```
+---
 
 We have two data points in $\mathbb{R}^{3}$:
 $$ \vec{x}_{1} = [2, 1]^{T},\quad y_{1} = 7 $$
@@ -48,10 +64,15 @@ We know that for linear regression with a bias/intercept term and mean-squared o
 
 ##### d. Give a specific third point $\langle \vec{x}_{3},\, y_{3} \rangle$ such that, when included with the first two above, will cause linear regression to *still have infinite solutions*. Your $\vec{x}_{3}$ should not equal $\vec{x}_{1}$ nor $\vec{x}_{2}$, nor should your $y_{3}$ equal either $y_{1}$ or $y_{2}$.
 
+---
 
-```python
+- Space is $\mathbb{R}^{3}$
+- Having less than $3$ linearly independent points means LR will have infinite solutions
+- Simply pick a new point that is a linear combination of the two given points
 
-```
+Let $$\vec{x}_{3} = 0.5\vec{x}_{1} + \vec{x}_{2} = [1.5, 1.5]^{T}$$ and $$y_{3} = 0.5y_{1} + 0.5y_{2} = 6$$
+
+---
 
 ### 2. Spectral Clustering
 The general idea behind spectral clustering is to construct a mapping of data points to an eigenspace of a graph-induced affinity matrix $A$, with the hope that the points are well-separated in the eigenspace to the point where something simple like $k$-means will work well on the embedded data.
@@ -106,26 +127,37 @@ In this problem, we’ll analyze how spectral clustering works on the simple dat
 
 ##### a. For the dataset in **Figure 4**, assume that the first cluster has $m_{1}$ points in it, and the second cluster has $m_{2}$ points. If we use the affinity equation from before to compute the affinity matrix $A$, what $\Theta$ value would you choose and why?
 
+---
 
-```python
+- Need to pick a $\Theta$ that is large enough to allow for intra-cluster connections, but smaller than the distance between the two clusters.
+- The largest distance between any two given points in a cluster will be the diagonal of the rectangluar cluster
+- So $\Theta$ should be have a value greater than the larger diameter, but smaller than the distance between the two clusters
+- The diagonal of the tall, thin rectangle is roughly $1.077$
+- The diagonal of the smaller rectangle is rougly $0.640$
+- The distance between the two clusters is greater than $1.5$
+- So an acceptable value would be $\Theta = 1.25$
 
-```
+---
 
 ##### b. The second step is to compute the first $k$ dominant eigenvectors of the affinity matrix, where $k$ is the number of clusters we want to have. For the dataset in **Figure 4**, and the affinity matrix defined by the previous equation, is there a value of $\Theta$ for which you can analytically compute the first two eigenvalues and eigenvectors? If not, explain why not. If yes, compute and record these eigenvalues and eigenvectors. What are the other $((m_{1} + m_{2}) − k)$ eigenvalues? Explain briefly.
 
-
-```python
-
-```
+- Using the same $\Theta = 1.25$ from part A, the affinity matrix will become block diagonal with an $m_1 \times m_1$ block and an $m_2 \times m_2$ block.
+- The remaining $((m_{1} + m_{2}) − 2)$ eigenvalues are $0$
+- There will be an eigenvector $\vec{e}_1 = [1_{m_1}, 0_{m_2}]^{T}$
+- There will be an eigenvector $\vec{e}_2 = [0_{m_1}, 1_{m_2}]^{T}$
 
 Spectral clustering algorithms often make use a graph Laplacian matrix, $L$. A favorite variant is the normalized graph Laplacian, $L = D^{−1/2}AD^{−1/2}$, as this formulation has many convenient properties ($D$ is a diagonal matrix whose $i$th diagonal element, $d_{i\,i}$, is the sum of the $i$th row of $A$).
 
 ##### c. Show that a vector $\vec{v} = [\sqrt{d_{1\,1}}, \sqrt{d_{2\,2}}, \ldots, \sqrt{d_{n\,n}}]^{T}$ is an eigenvector of $L$ with corresponding eigenvalue $\lambda = 1$.
 
+---
 
-```python
+- Since $\vec{v}$ is an eigenvector with corresponding eigenvalue $\lambda = 1$, then $$ L \cdot \vec{v} = 1 \cdot \vec{v} = D^{−1/2}AD^{−1/2}\vec{v} $$
+- Multiply $\vec{v}$ by $D^{−1/2}$ on the left: $$ D^{−1/2}\vec{v} = [d_{1\,1}^{-1/2}\sqrt{d_{1\,1}}, d_{2\,2}^{-1/2}\sqrt{d_{2\,2}}, \ldots, d_{n\,n}^{-1/2}\sqrt{d_{n\,n}}]^{T} = [1, 1, \ldots, 1]^{T} $$
+- Multipling $D^{−1/2}\vec{v}$ by $A$ on the left will result in a column of row-sums of $A$, since it will essentially be a dot product of each row of $A$ with $1$s: $$ AD^{−1/2}\vec{v} = [d_{1\,1}, d_{2\,2}, \ldots, d_{n\,n}]^{T} $$
+- Multiply $AD^{−1/2}\vec{v}$ on the left by $ D^{−1/2}$: $$ D^{−1/2}AD^{−1/2}\vec{v} = [d_{1\,1}^{-1/2}d_{1\,1}, d_{2\,2}^{-1/2}d_{2\,2}, \ldots, d_{n\,n}^{-1/2}d_{n\,n}]^{T} = [\sqrt{d_{1\,1}}, \sqrt{d_{2\,2}}, \ldots, \sqrt{d_{n\,n}}]^{T} = \vec{v} $$
 
-```
+---
 
 One of the convenient properties of normalized graph Laplacians is the eigenvalue $\lambda_{1}$ of the leading eigenvector is, at most, $1$; all other eigenvalues $\lambda_{2}, \ldots, \lambda_{n}$ have values strictly smaller than 1.
 
@@ -234,15 +266,14 @@ for path in files:
 # ------------------------------------------------------------------
 # 0. Initialize variables
 # ------------------------------------------------------------------
-infile  = "./Z_easy.txt"               # or "./Z_hard.txt"
-outfile = "./pred_labels_zEasy.txt"    # where predictions will be written
-groundTruth = "./y_easy.txt"           # or "./y_hard.txt"
+infile  = "./Z_hard.txt"               # or "./Z_hard.txt"
+outfile = "./pred_labels_zHard.txt"    # where predictions will be written
 
 d = 0.95        # the damping factor (float between 0 and 1)
 k = 1           # the number of data points per class to use as seeds
 t = "random"    # type of seed selection to use ("random" or "degree)
 g = 0.5         # value of gamma for the pairwise RBF affinity kernel
-e = 1e‑2        # the epsilon threshold or squared difference of $\vec{r}^{t}$ and $\vec{r}^{t+1}$ to determine convergence
+e = 0.01        # the epsilon threshold or squared difference of $\vec{r}^{t}$ and $\vec{r}^{t+1}$ to determine convergence
 
 # ------------------------------------------------------------------
 # 1. Imports & helpers
@@ -251,6 +282,7 @@ import numpy as np
 from sklearn.metrics.pairwise import rbf_kernel
 import sklearn.metrics.pairwise as pairwise                
 import matplotlib as plt
+from sklearn.metrics import confusion_matrix, classification_report
 
 def read_data(filepath: str):
     Z = np.loadtxt(filepath)
@@ -267,4 +299,133 @@ def save_data(filepath: str, Y):
 X, y = read_data(infile)
 
 # FINISH ME
+```
+
+
+```python
+# ------------------------------------------------------------------
+# 3. Build graph: affinity A, degree D, transition W
+# ------------------------------------------------------------------
+n                = X.shape[0]
+A                = rbf_kernel(X, gamma=g)            # symmetric affinity
+np.fill_diagonal(A, 0.0)                             # zero self‑loops optional
+degrees          = A.sum(axis=1)                     # d_ii
+D_inv            = 1.0 / degrees
+W                = (A.T * D_inv).T                   # row‑stochastic: sum_i W_ij = 1
+
+# ------------------------------------------------------------------
+# 4. Helper: choose k seeds for one class
+# ------------------------------------------------------------------
+rng = np.random.default_rng(42)                      # reproducible
+
+def choose_seeds(class_idx):
+    """Return indices of the k seeds for one class according to `t`."""
+    if len(class_idx) <= k:                          # use all if too few
+        return class_idx
+    if t == "random":
+        return rng.choice(class_idx, k, replace=False)
+    elif t == "degree":
+        return class_idx[np.argsort(degrees[class_idx])[::-1][:k]]
+    else:
+        raise ValueError("t must be 'random' or 'degree'")
+
+# ------------------------------------------------------------------
+# 5. Run MRW once per class -> list of ranking vectors
+# ------------------------------------------------------------------
+unique_labels     = np.unique(y[y != -1])            # exclude unlabeled (‑1)
+R_all             = []                               # store each r_c
+
+for c in unique_labels:
+    # --- build seed / teleportation vector u  ---------------------
+    idx_class     = np.where(y == c)[0]
+    seeds         = choose_seeds(idx_class)
+    u             = np.zeros(n, dtype=float)
+    u[seeds]      = 1.0
+    u            /= u.sum()                          # ‖u‖₁ = 1
+
+    # --- power iteration for MRW ----------------------------------
+    r_prev        = u.copy()
+    for _ in range(100):                             # hard iteration cap
+        r_next    = (1.0 - d) * u + d * W @ r_prev
+        if np.square(r_next - r_prev).sum() < e:
+            break
+        r_prev    = r_next
+    R_all.append(r_prev)
+
+R_all = np.vstack(R_all)                             # shape (q, n)
+
+# ------------------------------------------------------------------
+# 6. Predict labels for *every* vertex (incl. previously labeled)
+# ------------------------------------------------------------------
+pred_indices      = R_all.argmax(axis=0)             # argmax over classes
+pred_labels       = unique_labels[pred_indices]
+
+# keep original labels for those that were not ‑1 (optional but nice)
+is_unlabeled      = (y == -1)
+y_hat             = y.copy()
+y_hat[is_unlabeled] = pred_labels[is_unlabeled]
+
+# ------------------------------------------------------------------
+# 7. Save predictions
+# ------------------------------------------------------------------
+save_data(outfile, y_hat.astype(int))
+print(f"Predictions written to {outfile}")
+
+```
+
+    Predictions written to ./pred_labels_zHard.txt
+
+
+
+```python
+# ------------------------------------------------------------------
+# Change this line if you want to evaluate the hard set instead
+# e.g. ground_truth_file = "./y_hard.txt"
+# ------------------------------------------------------------------
+ground_truth_file = "./y_hard.txt"   # <‑‑ path to ground‑truth labels
+pred_file         = outfile          # variable defined in the previous cell
+
+# ------------------------------------------------------------------
+# Load labels
+# ------------------------------------------------------------------
+y_true = np.loadtxt(ground_truth_file, dtype=int)
+y_pred = np.loadtxt(pred_file,        dtype=int)
+
+# ------------------------------------------------------------------
+# Basic accuracy
+# ------------------------------------------------------------------
+accuracy = (y_true == y_pred).mean()
+print(f"Accuracy: {accuracy*100:.2f}%  ({len(y_true)} samples)")
+
+# ------------------------------------------------------------------
+# More detailed diagnostics
+# ------------------------------------------------------------------
+print("\nConfusion matrix:")
+print(confusion_matrix(y_true, y_pred))
+
+print("\nClassification report:")
+print(classification_report(y_true, y_pred, digits=3))
+```
+
+    Accuracy: 76.67%  (300 samples)
+    
+    Confusion matrix:
+    [[150   0]
+     [ 70  80]]
+    
+    Classification report:
+                  precision    recall  f1-score   support
+    
+               0      0.682     1.000     0.811       150
+               1      1.000     0.533     0.696       150
+    
+        accuracy                          0.767       300
+       macro avg      0.841     0.767     0.753       300
+    weighted avg      0.841     0.767     0.753       300
+    
+
+
+
+```python
+
 ```
