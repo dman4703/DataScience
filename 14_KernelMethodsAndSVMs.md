@@ -158,7 +158,7 @@ $$ \hat P(y) = \frac{n_{y}}{n} $$
 ![plot of particles whose color signifies their temperature](./pics/avgTemp_visual.png)
 - What is the temperature in the room? Average: $$ \hat T = \frac{1}{n}\sum_{i=1}^{n}Y_{i} $$
 
-![plot of particles whose color signifies their temperature, with a particle X marked and a small radius of neighboring particlse also marked](./pics/localAvg_visual.png)
+![plot of particles whose color signifies their temperature, with a particle X marked and a small radius (length h) of neighboring particlse also marked](./pics/localAvg_visual.png)
 - At location x? "Local" Average: $$ \hat T = \frac{\sum_{i=1}^{n}Y_{i}1_{\| X_{i} - x \| \le h}}{\sum_{i=1}^{n}1_{\| X_{i} - x \| \le h}} $$
 
 ## Kernel Regression
@@ -168,7 +168,7 @@ $$ \hat P(y) = \frac{n_{y}}{n} $$
 - Boxcar kernel yields local average
 
 ## Choice of kernel bandwidth
-![noisy scatter of “power vs. multipole” data (the little dots) being smoothed by a Nadaraya–Watson kernel smoother with h=1, 10, 50, 200; heavy black curve in each is the fitted regression line. h=1: the bandwidth is far too small, so the fit chases every little wiggle (high variance, under-smoothed). h=10: still under-smoothed, but you see lots of spurious bumps. h=50: “just right”, the smoother captures the main peak and shoulders without overreacting to noise. h=200: too large, and the curve is overly flat (high bias, you’ve washed out the true shape)](./pics/.png)
+![noisy scatter of “power vs. multipole” data (the little dots) being smoothed by a Nadaraya–Watson kernel smoother with h=1, 10, 50, 200; heavy black curve in each is the fitted regression line. h=1: the bandwidth is far too small, so the fit chases every little wiggle (high variance, under-smoothed). h=10: still under-smoothed, but you see lots of spurious bumps. h=50: “just right”, the smoother captures the main peak and shoulders without overreacting to noise. h=200: too large, and the curve is overly flat (high bias, you’ve washed out the true shape)](./pics/kernelBW_visual.png)
 - Choice of *kernel* is not terribly important!
 
 ## Kernel Regression as WLS
