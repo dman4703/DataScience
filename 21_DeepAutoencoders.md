@@ -129,12 +129,11 @@ $$ L(\vec{x}, g(f(\vec{x})) + \Omega(\vec{h})$$
     > $\log{p_{\text{decoder}}(\vec{x} \mid \vec{h}=f(\tilde{x}))}$: ...with respect to learning *uncorrupted data* from the encoded corrupted data
 - Easy choice of $C$: $$ C(\tilde{x} \mid \vec{x}) = \mathcal{N}(\tilde{x}; \mu = \vec{x}, \Sigma = \sigma^{2}I) $$
 
+![geometric illustration of what a denoising autoencoder actually learns. Black curve: the true data manifold in input space. Red ×’s: clean data samples lying exactly on that manifold. Gray circle around one red ×: the region from which noisy points \tilde{x} are drawn by the corruption process C(\tilde{x} \mid x). Green arrows: the “denoising vectors” g(f(\tilde{x})) - \tilde{x}. Each arrow shows how the autoencoder maps a corrupted point \tilde{x} back toward the nearest spot on the manifold. Taken together, those arrows form a vector field around the manifold that points inward. In fact, that field approximates the score function i.e. the gradient of the data density. by training to undo small corruptions, a denoising autoencoder learns a vector field that “flows” noisy points back onto the data manifold.](./pics/denoisingAE_manifold.png)
 - DAEs train to map $\tilde{x}$ back to uncorrupted $x$
 - Gray circle = equiprobable $C$
 - Vector from $\tilde{x}$ points approximately to nearest $x$ on manifold
 - **DFA learns a vector field around a manifold**
-
-![geometric illustration of what a denoising autoencoder actually learns. Black curve: the true data manifold in input space. Red ×’s: clean data samples lying exactly on that manifold. Gray circle around one red ×: the region from which noisy points \tilde{x} are drawn by the corruption process C(\tilde{x} \mid x). Green arrows: the “denoising vectors” g(f(\tilde{x})) - \tilde{x}. Each arrow shows how the autoencoder maps a corrupted point \tilde{x} back toward the nearest spot on the manifold. Taken together, those arrows form a vector field around the manifold that points inward. In fact, that field approximates the score function i.e. the gradient of the data density. by training to undo small corruptions, a denoising autoencoder learns a vector field that “flows” noisy points back onto the data manifold.](./pics/denoisingAE_manifold.png)
 
 ![visual showing the denoising vector field learned by a denoising autoencoder around a 2D “spiral” data manifold. Orange dots lie exactly on the spiral—that’s the true data manifold. Black arrows at each grid point show the denoising update g(f(\tilde{x})) - \tilde{x} that the autoencoder would apply to a noisy input \tilde{x}. all arrows point inward, pushing points back onto the spiral.](./pics/denoisingAE_vectorField.png)
 
