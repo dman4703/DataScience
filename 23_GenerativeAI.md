@@ -264,6 +264,7 @@ $$ \text{Noise} \quad \xrightarrow{p_{\theta}(x_{t-1} \mid x_{t}) = \mathcal{N}(
 - Environmental concerns
 - Worker exploitation
 - Hidden costs of AI
+
 | Model name | Number of parameters | Datacenter PUE | Carbon intensity of grid used | Power consumption | CO₂eq emissions | CO₂eq emissions × PUE |
 |------------|----------------------|----------------|-------------------------------|-------------------|-----------------|-----------------------|
 | GPT-3      | 175B                 | 1.1            | 429 gCO₂eq/kWh                | 1,287 MWh         | *502 tonnes*      | 552 tonnes            |
