@@ -70,6 +70,7 @@ $$ \Delta(X, Y) = \frac{n_{X}n_{Y}}{n_{X} + n_{Y}}\| \mu_{X} - \mu_{Y} \|^{2} $$
 ##### b. Assume you are given two *pairs* of clusters $P_{1}$ and $P_{2}$. The centers of the two clusters in the $P_{1}$ pair are farther apart than the pair of centers in $P_{2}$. Using Ward’s metric, does agglomerative clustering *always* choose to merge the two clusters in $P_{2}$? Why or why not? Justify your answer with a simple example.
 
 - No, since Ward's metric also depends on cluster sizes, not just distance between centriods
+
 | pair   | cluster sizes | centroid gap         | Ward cost                               |
 | ------ | ------------- | -------------------- | --------------------------------------- |
 | **P₁** | $n_X=n_Y=1$   | $\|\mu_X-\mu_Y\|=10$ | $\tfrac{1\cdot1}{1+1}\,10^{2}=50$       |
