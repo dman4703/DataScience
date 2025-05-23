@@ -18,7 +18,7 @@ The repository contains lecture notebooks covering the following topics:
 1. **[Data Science Introduction](01_DataScienceIntro.pdf)** - Course overview and foundations
 2. **[Python Crash Course](notebook/02_PythonCrashCourse.ipynb)** - Python fundamentals for data science
 3. **[Machine Learning Crash Course](notebook/03_MachineLearningCrashCourse.ipynb)** - ML fundamentals and concepts
-4. **[Linear Algebra](04_LinearAlgebra.md)** - Mathematical foundations
+4. **[Linear Algebra](markdown/04_LinearAlgebra.md)** - Mathematical foundations
 5. **[Dense Motion Analysis](notebook/05_DenseMotionAnalysis.ipynb)** - Computer vision and optical flow
 6. **[Linear Dynamical Systems](notebook/06_LinearDynamicalSystems.ipynb)** - Time series and dynamic systems
 7. **[Linear and Ensemble Models](notebook/07_LinearAndEnsembleModels.ipynb)** - Regression and ensemble methods
